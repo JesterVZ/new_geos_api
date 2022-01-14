@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:geos_api/info.dart';
 import 'package:geos_api/request.dart';
 import 'package:geos_api/result_data.dart';
+import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 import 'info_page.dart';
@@ -17,35 +18,53 @@ class HomePage extends StatefulWidget{
 class _HomePage extends State<HomePage>{
   final loginController = TextEditingController();
   final passwordController = TextEditingController();
-  final _channel = WebSocketChannel.connect(
-    Uri.parse('wss://promo.dev.conres.ru:2450/'),
+  final channel = IOWebSocketChannel.connect(
+    Uri.parse('wss://demo.piesocket.com/v3/channel_1?api_key=oCdCMcMPQpbvNjUIzqtvF1d2X2okWpDQj4AwARJuAgtjhzKxVEjQU6IdCjwm&notify_self'),
   );
-  late Future<ResultData> resultData;
+  
+  late Future<String> resultData;
   late Info info;
-
+  String _message = "";
+  
   @override
   void initState() {
     super.initState();
-    //resultData = fetchData("123456789000", "123456");
-    _channel.sink.add(data)
+    resultData = fetchData("123456789000", "123456");
+
   }
 
   @override
   Widget build(BuildContext context) {
+    channel.stream.listen((message) {
+      setState(() {
+        _message = message.toString();
+      });
+      print('message = $message');
+      //channel.sink.add('received!');
+      channel.sink.close();
+    });
     return Scaffold(
       appBar: AppBar(title: const Text("Geos API"),),
       body: Column(
         children: [
-          StreamBuilder(
-            stream: _channel.stream,
+          FutureBuilder<String>(
+            future: resultData,
             builder: (context, snapshot){
               if(snapshot.hasData){
-                return Text(snapshot.data.toString());
+                //_channel.sink.add(snapshot.data.toString());
+                return Column(
+                  children: [
+                    Text("Cookies: " + snapshot.data.toString()),
+                    ElevatedButton(onPressed: ShowFullInfo, child: const Text("show full info"))
+                  ],
+                );
               } else {
-                return const Text("error");
+                return const Text("Error");
               }
             },
-          )
+          ),
+          Text('$_message')
+
         ],
       ),
     );

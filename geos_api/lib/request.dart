@@ -6,6 +6,7 @@ import 'package:geos_api/result_data.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'consts.dart';
 
+
 Future<String> getCookies(String username, String password) async{
   String uri = protocol + domain + '/lk/index.php?route=common/login/api';
   var dio = Dio(BaseOptions(
@@ -22,16 +23,25 @@ Future<String> getCookies(String username, String password) async{
   dio.interceptors.add(CookieManager(cookieJar));
 
   final response = await dio.post(uri, data: formData);
+  final cookies = await cookieJar.loadForRequest(Uri.parse(uri));
+
+  String pf = cookies[2].value;
+  String pa = cookies[3].value;
+  String pc = cookies[4].value;
+  String pp = cookies[5].value;
+  String pd = cookies[5].value;
 
   if(response.statusCode == 200){
-    String result = '{"cmd":"connect","cookie":"' + ;
+    String result = '{"cmd":"connect","cookie":"pf=' + pf + '; pp=' + pp + '; pd=' + pd + '; pa=' + pa + '; pc=' + pc + '"}';
+    return result;
+  } else {
+    return "";
   }
+
 }
 
-Future<ResultData> fetchData(String username, String password) async{
+Future<String> fetchData(String username, String password) async{
   String uri = protocol + domain + '/lk/index.php?route=common/login/api';
-
-  //String uri = protocol + domain + '/worker/index.php?route=common/login/api_login';
 
   var dio = Dio(BaseOptions(
     connectTimeout: 30000,
@@ -47,25 +57,19 @@ Future<ResultData> fetchData(String username, String password) async{
   dio.interceptors.add(CookieManager(cookieJar));
 
   final response = await dio.post(uri, data: formData);
+  final cookies = await cookieJar.loadForRequest(Uri.parse(uri));
 
-  print(await cookieJar.loadForRequest(Uri.parse(uri)));
-
-  final _channel = WebSocketChannel.connect(
-    Uri.parse('wss://promo.dev.conres.ru:2450/'),
-  );
-
-  _channel.stream.listen((event) {
-    print(event);
-  },
-  onError: (error) => print(error));
-  //String uriInfo = protocol + domain + '/worker/index.php?route=common/login/api_get_info';
-
-  //final responseInfo = await dio.post(uriInfo);
+  String pf = cookies[2].value;
+  String pa = cookies[3].value;
+  String pc = cookies[4].value;
+  String pp = cookies[5].value;
+  String pd = cookies[5].value;
 
   if(response.statusCode == 200){
-    return ResultData.fromMap(response.data);
+    String result = '{"cmd":"connect","cookie":"pf=' + pf + '; pp=' + pp + '; pd=' + pd + '; pa=' + pa + '; pc=' + pc + '"}';
+    return result;
   } else {
-    throw Exception('error');
+    return "";
   }
 
 }
