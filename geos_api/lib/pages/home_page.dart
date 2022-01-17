@@ -1,3 +1,5 @@
+
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:geos_api/info.dart';
 import 'package:geos_api/request.dart';
@@ -15,14 +17,16 @@ class HomePage extends StatefulWidget{
 
 }
 
+
 class _HomePage extends State<HomePage>{
   final loginController = TextEditingController();
   final passwordController = TextEditingController();
-  final channel = IOWebSocketChannel.connect(
-    Uri.parse('wss://demo.piesocket.com/v3/channel_1?api_key=oCdCMcMPQpbvNjUIzqtvF1d2X2okWpDQj4AwARJuAgtjhzKxVEjQU6IdCjwm&notify_self'),
-  );
-  
+
+
+  final channel = IOWebSocketChannel.connect(Uri.parse("wss://promo.dev.conres.ru:2450/"));
+
   late Future<String> resultData;
+  late Future<SecureSocket> socket;
   late Info info;
   String _message = "";
   
@@ -30,6 +34,8 @@ class _HomePage extends State<HomePage>{
   void initState() {
     super.initState();
     resultData = fetchData("123456789000", "123456");
+    final key = WebSocketChannel.signKey("0c752f7098153cd4901fb2a0a972418fec9eed31");
+    socket = connectToSocket("promo.dev.conres.ru", 2450);
 
   }
 
@@ -62,6 +68,17 @@ class _HomePage extends State<HomePage>{
                 return const Text("Error");
               }
             },
+          ),
+          FutureBuilder<SecureSocket>(
+            future: socket,
+            builder: (context, snapshot){
+              if(snapshot.hasData){
+                print(snapshot.data.toString());
+                return Text(snapshot.data.toString());
+              } else {
+                return Text("error");
+              }
+            }
           ),
           Text('$_message')
 
