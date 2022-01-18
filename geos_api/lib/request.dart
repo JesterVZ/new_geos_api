@@ -1,17 +1,39 @@
 
+import 'dart:async';
 import 'dart:io';
 
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:geos_api/result_data.dart';
+import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'consts.dart';
 
 Future<SecureSocket> connectToSocket(dynamic host, int port) async{
   SecureSocket s = await SecureSocket.connect(host, port, onBadCertificate: (X509Certificate cert) => true );
-  
   return s;
+}
+Future<String> connectToDefaultSocket (dynamic host, int port, String _request) async{
+  Completer<String> _completer = Completer<String>();
+  var _secureResponse;
+  Socket _socket = await Socket.connect(host, port);
+  _socket.listen((data) {
+    _secureResponse =  new String.fromCharCodes(data).trim();
+    _completer.complete(_secureResponse);
+  },
+  onError: ((error, StackTrace trace) {
+    _secureResponse = "Server error";
+    print("(2) $_secureResponse");
+    _completer.completeError(_secureResponse);
+  }),
+  onDone: (){
+    _socket.destroy();
+  },
+  cancelOnError: false);
+
+  _socket.write('$_request\r\n');
+  return _completer.future;
 }
 
 Future<String> fetchData(String username, String password) async{
